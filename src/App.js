@@ -21,7 +21,7 @@ function App() {
 
   return (
     <div className="App">
-      Learn React
+      <h1>Weather Application</h1>
       {weatherData && (
         <div>
           <p>Temperature: {weatherData.main.temp}</p>
