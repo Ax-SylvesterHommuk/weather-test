@@ -1,33 +1,44 @@
 import React, { useState, useEffect } from "react";
-import setupMirageServer from "./mirage";
+import createMockServer from "./createMockServer";
 import './App.css';
 
-setupMirageServer();
+if(process.env.NODE_ENV === 'development') {
+  createMockServer();
+}
 
 function App() {
-  const [weatherData, setWeatherData] = useState(null);
+  const [query, setQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
 
-  useEffect(() => {
-    fetch(`/api/weather?lat=44.34&lon=10.99`)
-      .then((response) => response.json())
-      .then((json) => {
-        console.log(json); 
-        setWeatherData(json);
-      })
-      .catch((error) => {
-        console.error('Error fetching weather data:', error);
-      });
-  }, []);
+  const inputChangeHandler = (event) => {
+    setQuery(event.target.value);
+  }
+
+  const buttonClickHandler = () => {
+    fetch(`http://api.openweathermap.org/geo/1.0/direct?q=${query}&limit=5`)
+    .then((result) => {
+      return result.json();
+    })
+    .then((cities) => {
+      setSearchResults(cities.map((city) => ({ 
+        name: city.name,
+        country: city.country,
+        lat: city.lat,
+        lon: city.lon
+      })));
+    })
+  }
 
   return (
     <div className="App">
       <h1>Weather Application</h1>
-      {weatherData && (
-        <div>
-          <p>Temperature: {weatherData.main.temp}</p>
-          <p>Description: {weatherData.weather[0].description}</p>
-        </div>
-      )}
+      <input type="text" data-testid="search-input" onChange={inputChangeHandler} />
+      <button data-testid="search-button" onClick={buttonClickHandler}>Search</button>
+
+      <div data-testid="search-results">
+        {searchResults.map((city) => <div key={`${city.lat}-${city.lon}`}>{city.name}
+        </div>)}
+      </div>
     </div>
   );
 }
